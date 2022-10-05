@@ -1,0 +1,57 @@
+# Use root/example as user/password credentials
+version: '3.1'
+
+services:
+
+  db:
+    image: mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: $MYSQL_ROOT_PASS
+      MARIADB_USER: $MYSQL_USER
+      MARIADB_PASSWORD: $MYSQL_PASS
+      MARIADB_DATABASE: "people"
+    volumes:
+      - mariadb:/var/lib/mysql
+      - $PWD/db_init:/docker-entrypoint-initdb.d # not working yet...
+        # may need to manually init data
+  
+  php:
+    image: sparanoid/php-fpm
+    restart: unless-stopped
+    volumes:
+      - $PWD/site:/srv
+    environment:
+      DB_SERVER: "db" # Docker database label
+      DB_USER: $MYSQL_USER
+      DB_PASS: $MYSQL_PASS
+
+  caddy:
+    image: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80" # HTTP
+      - "8080:8080" # Adminer HTTP
+      # we will skip https (for now)
+    volumes:
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile
+      - $PWD/site/my-first-gatsby-site/public:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    #ports:
+    # We will use reverse proxy
+    #  - 8080:8080
+    depends_on:
+      - caddy
+      - db
+
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:
+  mariadb:
+    external: true

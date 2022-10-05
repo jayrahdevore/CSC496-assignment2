@@ -1,0 +1,3 @@
+[submodule "site/my-first-gatsby-site"]
+	path = site/my-first-gatsby-site
+	url = https://github.com/jayrahdevore/my-first-gatsby-site
